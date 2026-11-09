@@ -51,8 +51,30 @@ const getSnippetByID = (req, res) => {
     });
 };
 
+const getSnippetByLanguage = (req, res) => {
+    const { language } = req.params;
+    const snippets = snippetService.getAllSnippets();
+
+    const filteredSnippets = snippetService.getSnippetByLanguage(language);
+
+    if(!language || !language.trim() || filteredSnippets.length === 0){
+        return res.status(404).json({
+            success: false,
+            message: "No snippets found for the this language",
+            data: null
+        });
+    }
+
+    res.status(200).json({
+        success: true,
+        message: "snippets with specified language found successfully",
+        data: filteredSnippets
+    });
+}
+
 module.exports = {
     getSnippets,
     createSnippet,
-    getSnippetByID
+    getSnippetByID,
+    getSnippetByLanguage
 };

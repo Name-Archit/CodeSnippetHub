@@ -12,4 +12,7 @@ router.post("/", snippetController.createSnippet);
 // GET a snippet by ID
 router.get("/:id", snippetController.getSnippetByID);
 
+//GET a snippet by language
+router.get("/language/:language", snippetController.getSnippetByLanguage);
+
 module.exports = router;

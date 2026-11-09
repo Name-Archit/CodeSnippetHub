@@ -2,7 +2,7 @@ const snippets = [
     {
         id: 1,
         title: "Binary Search",
-        language: "C++",
+        language: "CPP",
         description: "Binary Search Implementation",
         code: `#include <bits/stdc++.h> using namespace std; int main() { int arr[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}; int n = sizeof(arr) / sizeof(arr[0]);
                int target = 6; int low = 0, high = n - 1; int result = -1; while (low <= high) { int mid = low + (high - low) / 2; 
@@ -66,8 +66,14 @@ const getSnippetByID = (id) => {
     return snippet;
 };
 
+const getSnippetByLanguage = ( language ) => {
+    const filteredSnippets = snippets.filter(snippet => snippet.language.toLowerCase() === language.toLowerCase());
+    return filteredSnippets;
+}
+
 module.exports = {
     getAllSnippets,
     createSnippet,
-    getSnippetByID
+    getSnippetByID,
+    getSnippetByLanguage
 };
