@@ -21,10 +21,29 @@ const snippets = [
     }
 ];
 
+const createSnippet = (snippetData) => {
+
+    const newSnippet = {
+        id: snippets.length > 0
+            ? Math.max(...snippets.map(s => s.id)) + 1
+            : 1,
+
+        title: snippetData.title,
+        language: snippetData.language,
+        description: snippetData.description || "",
+        code: snippetData.code
+    };
+
+    snippets.push(newSnippet);
+
+    return newSnippet;
+};
+
 const getAllSnippets = () => {
     return snippets;
 };
 
 module.exports = {
-    getAllSnippets
+    getAllSnippets,
+    createSnippet
 };
