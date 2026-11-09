@@ -32,7 +32,27 @@ const createSnippet = (req, res) => {
     });
 };
 
+const getSnippetByID = (req, res) => {
+    const { id } = req.params;
+    const snippetID = snippetService.getSnippetByID(id);
+
+    if(!snippetID){
+        return res.status(404).json({
+            success: false,
+            message: "THERE IS NO USER WITH THIS ID",
+            data: null
+        });
+    }
+
+    res.status(200).json({
+        success: true,
+        message: "snippet with user ID found successfully",
+        data: snippetID
+    });
+};
+
 module.exports = {
     getSnippets,
-    createSnippet
+    createSnippet,
+    getSnippetByID
 };
