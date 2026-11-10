@@ -1,3 +1,5 @@
+const pool = require("../config/db");
+
 const snippets = [
     {
         id: 1,
@@ -57,29 +59,26 @@ const createSnippet = (snippetData) => {
     return newSnippet;
 };
 
-const getAllSnippets = () => {
-    return snippets;
+const getAllSnippets = async () => {
+    const result = await pool.query('SELECT * FROM snippets');
+    return result.rows; 
 };
 
-const getSnippetByID = (id) => {
-    const snippet = snippets.find(snippet => snippet.id === parseInt(id));
-    return snippet;
+const getSnippetByID = async (id) => {
+    const result = await pool.query("SELECT * FROM snippets WHERE id = $1", [parseInt(id)]);
+    return result.rows[0] || null;
 };
 
-const getSnippetByLanguage = ( language ) => {
-    const filteredSnippets = snippets.filter(snippet => snippet.language.toLowerCase() === language.toLowerCase());
-    return filteredSnippets;
+const getSnippetByLanguage = async ( language ) => {
+    const result = await pool.query("SELECT * FROM snippets WHERE language = $1", [language]);
+    return result.rows.length > 0 ? result : null;
 }
 
-const updateSnippet = (id, updatedData) => {
-    const snippetIndex = snippets.findIndex(snippet =>snippet.id === parseInt(id));
+const updateSnippet = async (id, updatedData) => {
+    const result = await pool.query("UPDATE snippets SET title = $1, language = $2, description = $3, code = $4 WHERE id = $5 RETURNING *",
+        [updatedData.title, updatedData.language, updatedData.description, updatedData.code, parseInt(id)]);
 
-    if(!snippetIndex){
-        return null;
-    }
-
-    Object.assign(snippets[snippetIndex], updatedData);
-    return snippets[snippetIndex];
+    return result.rows[0] || null;    
 }
 
 const deleteSnippet = (id) => {
