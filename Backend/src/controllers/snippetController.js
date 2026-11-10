@@ -1,17 +1,27 @@
 const snippetService = require("../services/snippetService");
 
-const getSnippets = (req, res) => {
-    const snippets = snippetService.getAllSnippets();
+const getSnippets = async (req, res) => {
+    try{
+    const snippets = await snippetService.getAllSnippets();
 
     res.status(200).json({
         success: true,
         data: snippets
     });
+
+    }catch(error){
+        console.log("Error fetching snippets", error);
+        res.status(500).json({
+            success: false,
+            message: "Internal Server error",
+            data: null
+        });
+    }    
 };
 
-const createSnippet = (req, res) => {
-
-    const { title, language, code } = req.body;
+const createSnippet =async (req, res) => {
+    try{
+         const { title, language, code } = req.body;
 
     if (!title || !title.trim() ||
         !language || !language.trim() ||
@@ -23,39 +33,58 @@ const createSnippet = (req, res) => {
         });
     }
 
-    const newSnippet = snippetService.createSnippet(req.body);
+    const newSnippet = await snippetService.createSnippet(req.body);
 
     res.status(201).json({
         success: true,
         message: "Snippet created successfully",
         data: newSnippet
     });
+
+    }catch(error){
+        console.log("Error fetching snippets", error);
+        res.status(500).json({
+            success: false,
+            message: "Internal Server error",
+            data: null
+        });
+    }   
 };
 
-const getSnippetByID = (req, res) => {
-    const { id } = req.params;
-    const snippetID = snippetService.getSnippetByID(id);
+const getSnippetByID = async (req, res) => { 
+    try {
+        const { id } = req.params;                
+        const snippet = await snippetService.getSnippetByID(id); 
 
-    if(!snippetID){
-        return res.status(404).json({
+        if (snippet === -1) {
+            return res.status(404).json({
+                success: false,
+                message: "THERE IS NO SNIPPET WITH THIS ID",
+                data: null
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Snippet found successfully",
+            data: snippet
+        });
+    } catch (error) {
+        console.error("Error fetching snippet:", error);
+        res.status(500).json({
             success: false,
-            message: "THERE IS NO USER WITH THIS ID",
+            message: "Internal server error",
             data: null
         });
     }
-
-    res.status(200).json({
-        success: true,
-        message: "snippet with user ID found successfully",
-        data: snippetID
-    });
 };
 
-const getSnippetByLanguage = (req, res) => {
+const getSnippetByLanguage =async (req, res) => {
+    try {
     const { language } = req.params;
-    const snippets = snippetService.getAllSnippets();
+    const snippets = await snippetService.getAllSnippets();
 
-    const filteredSnippets = snippetService.getSnippetByLanguage(language);
+    const filteredSnippets = await snippetService.getSnippetByLanguage(language);
 
     if(!language || !language.trim() || filteredSnippets.length === 0){
         return res.status(404).json({
@@ -70,32 +99,51 @@ const getSnippetByLanguage = (req, res) => {
         message: "snippets with specified language found successfully",
         data: filteredSnippets
     });
-}
+    }catch(error){
+        console.error("Error fetching snippet:", error);
+        res.status(500).json({
+            success: false,
+            message: "Internal server error",
+            data: null
+        });
+    }
+   
+};
 
-const updateSnippet = (req, res) => {
-    const { id } = req.params;
-    const { title, language, description, code } = req.body;
+const updateSnippet = async (req, res) => {
+    try{
+        const { id } = req.params;
+        const { title, language, description, code } = req.body;
 
-    const updateSnippet = snippetService.updateSnippet(id, { title, language, description, code });
+        const updateSnippet =await snippetService.updateSnippet(id, { title, language, description, code });
 
-    if(!updateSnippet){
-        return res.status(404).json({
+        if(!updateSnippet){
+             return res.status(404).json({
             success: false,
             message: "Snippet not found not update took place",
             data: null
         });
+      }
+
+        res.status(200).json({
+          success: true,
+          message: "Snippet Updates successfully",
+         data: updateSnippet
+      });
+    }catch(error){
+         console.error("Error fetching snippet:", error);
+            res.status(500).json({
+            success: false,
+            message: "Internal server error",
+            data: null
+        });
     }
+};
 
-    res.status(200).json({
-        success: true,
-        message: "Snippet Updates successfully",
-        data: updateSnippet
-    });
-}
-
-const deleteSnippet = (req, res) => {
-    const { id } = req.params;
-    const deleteSnippet = snippetService.deleteSnippet(id);
+const deleteSnippet = async (req, res) => {
+    try{
+         const { id } = req.params;
+    const deleteSnippet = await snippetService.deleteSnippet(id);
 
     if(!deleteSnippet){
         returnres.status(404).json({
@@ -110,7 +158,15 @@ const deleteSnippet = (req, res) => {
         message: "snippet deleted successfully",
         data: deleteSnippet
     });
-}
+    }catch(error){
+         console.error("Error fetching snippet:", error);
+        res.status(500).json({
+            success: false,
+            message: "Internal server error",
+            data: null
+        });
+    }   
+};
 
 module.exports = {
     getSnippets,

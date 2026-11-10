@@ -1,4 +1,4 @@
-const pool = require("../config/db");
+const pool = require("../../config/db");
 
 const createSnippet = async (snippetData) => {
 
@@ -14,7 +14,7 @@ const getAllSnippets = async () => {
 
 const getSnippetByID = async (id) => {
     const result = await pool.query("SELECT * FROM snippets WHERE id = $1", [parseInt(id)]);
-    return result.rows[0] || null;
+    return result.rows[0] || -1;
 };
 
 const getSnippetByLanguage = async ( language ) => {
