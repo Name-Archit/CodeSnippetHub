@@ -2,7 +2,7 @@ import React from 'react';
 
 export default function Sidebar() {
   return (
-    <aside className="w-[20%] bg-[#080d1a] text-slate-300 border-r border-slate-800 flex flex-col p-4 justify-between h-full">
+    <aside className="w-[15%] bg-[#080d1a] text-slate-300 border-r border-slate-800 flex flex-col p-4 justify-between h-full">
       <div>
         {/* Logo */}
         <div className="flex items-center gap-2 text-red-500 font-bold text-xl mb-8">
@@ -20,10 +20,11 @@ export default function Sidebar() {
 
         {/* Navigation Items */}
         <nav className="space-y-2">
-          <button className="w-full text-left px-3 py-2 rounded-md hover:bg-slate-800 text-slate-400">Dashboard</button>
+          <button className="w-full text-left px-3 py-2 rounded-md hover:bg-slate-800 text-slate-300">Account</button>
           <button className="w-full text-left px-3 py-2 rounded-md bg-red-600/20 text-red-400 font-medium border border-red-500/30">Snippets</button>
-          <button className="w-full text-left px-3 py-2 rounded-md hover:bg-slate-800 text-slate-400">+ Create New</button>
-          <button className="w-full text-left px-3 py-2 rounded-md hover:bg-slate-800 text-slate-400">Actions</button>
+          <button className="w-full text-left px-3 py-2 rounded-md hover:bg-slate-800 text-slate-300">+ Create New</button>
+          <button className="w-full text-left px-3 py-2 rounded-md hover:bg-slate-800 text-slate-300">++ Update Snippet</button>
+          <button className="w-full text-left px-3 py-2 rounded-md hover:bg-slate-800 text-slate-300">- Delete Snippet</button>
         </nav>
       </div>
 

@@ -3,7 +3,7 @@ import React from 'react';
 export default function CodeViewer({ snippet }) {
   if (!snippet) {
     return (
-      <section className="w-[30%] bg-[#080d1a] p-6 text-slate-500 flex items-center justify-center h-full">
+      <section className="w-[25%] bg-[#080d1a] p-6 text-slate-500 flex items-center justify-center h-full">
         Select a snippet to view code
       </section>
     );

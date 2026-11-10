@@ -2,8 +2,8 @@ import React from 'react';
 
 export default function SnippetFeed({ snippets, selectedSnippet, onSelectSnippet }) {
   return (
-    <main className="w-[50%] bg-[#0b132b] p-6 border-r border-slate-800 flex flex-col h-full overflow-y-auto">
-      <h1 className="text-2xl font-bold text-white mb-6">Feed</h1>
+    <main className="w-[60%] bg-[#0b132b] p-6 border-r border-slate-800 flex flex-col h-full overflow-y-auto">
+      <h1 className="text-2xl font-bold text-white mb-6">CODE SNIPPET</h1>
 
       <div className="space-y-4">
         {snippets.map((snippet) => {
