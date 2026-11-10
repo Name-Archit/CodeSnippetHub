@@ -72,9 +72,51 @@ const getSnippetByLanguage = (req, res) => {
     });
 }
 
+const updateSnippet = (req, res) => {
+    const { id } = req.params;
+    const { title, language, description, code } = req.body;
+
+    const updateSnippet = snippetService.updateSnippet(id, { title, language, description, code });
+
+    if(!updateSnippet){
+        return res.status(404).json({
+            success: false,
+            message: "Snippet not found not update took place",
+            data: null
+        });
+    }
+
+    res.status(200).json({
+        success: true,
+        message: "Snippet Updates successfully",
+        data: updateSnippet
+    });
+}
+
+const deleteSnippet = (req, res) => {
+    const { id } = req.params;
+    const deleteSnippet = snippetService.deleteSnippet(id);
+
+    if(!deleteSnippet){
+        returnres.status(404).json({
+            success: false,
+            message: "Snippet not found no deletion took place",
+            data: null
+        });
+    }
+
+    res.status(200).json({
+        success: true,
+        message: "snippet deleted successfully",
+        data: deleteSnippet
+    });
+}
+
 module.exports = {
     getSnippets,
     createSnippet,
     getSnippetByID,
-    getSnippetByLanguage
+    getSnippetByLanguage,
+    updateSnippet,
+    deleteSnippet
 };

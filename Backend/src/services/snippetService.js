@@ -71,9 +71,32 @@ const getSnippetByLanguage = ( language ) => {
     return filteredSnippets;
 }
 
+const updateSnippet = (id, updatedData) => {
+    const snippetIndex = snippets.findIndex(snippet =>snippet.id === parseInt(id));
+
+    if(!snippetIndex){
+        return null;
+    }
+
+    Object.assign(snippets[snippetIndex], updatedData);
+    return snippets[snippetIndex];
+}
+
+const deleteSnippet = (id) => {
+    const snippetIndex = snippets.findIndex(snippet =>snippet.id === parseInt(id));
+
+    if(snippetIndex === -1){
+        return null;
+    }
+
+    return snippets.splice(snippetIndex, 1)[0];
+}
+
 module.exports = {
     getAllSnippets,
     createSnippet,
     getSnippetByID,
-    getSnippetByLanguage
+    getSnippetByLanguage,
+    updateSnippet,
+    deleteSnippet
 };

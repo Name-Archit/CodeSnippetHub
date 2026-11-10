@@ -15,4 +15,10 @@ router.get("/:id", snippetController.getSnippetByID);
 //GET a snippet by language
 router.get("/language/:language", snippetController.getSnippetByLanguage);
 
+// PUT update a snippet by ID
+router.put("/:id", snippetController.updateSnippet);
+
+//DELETE a snippet by ID
+router.delete("/:id", snippetController.deleteSnippet);
+
 module.exports = router;
