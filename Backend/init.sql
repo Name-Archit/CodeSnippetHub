@@ -1,5 +1,19 @@
+-- CodeFlare Database Initialization Script
+-- Database: codeSnippetHub
+
+-- 1. Users Table
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 2. Snippets Table (with user_id reference)
 CREATE TABLE IF NOT EXISTS snippets (
     id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
     title VARCHAR(255) NOT NULL,
     language VARCHAR(50) NOT NULL,
     description TEXT,
@@ -8,13 +22,17 @@ CREATE TABLE IF NOT EXISTS snippets (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Index for fast searching by programming language
-CREATE INDEX IF NOT EXISTS idx_snippets_language ON snippets (LOWER(language));
+-- 3. Migration safety check: add user_id column if table already existed without it
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'snippets' AND column_name = 'user_id'
+    ) THEN
+        ALTER TABLE snippets ADD COLUMN user_id INTEGER REFERENCES users(id) ON DELETE CASCADE;
+    END IF;
+END $$;
 
--- Optional initial seed data
-INSERT INTO snippets (title, language, description, code)
-VALUES 
-    ('React Auth Hook', 'React', 'A custom hook for managing user authentication and state in React applications.', 'const useAuth = () => {\n  const [user, setUser] = useState(null);\n  const login = (data) => setUser(data);\n  const logout = () => setUser(null);\n  return { user, login, logout };\n};'),
-    ('Go API Handler', 'Go', 'Clean and efficient API route handler for a Go web server.', 'func handleRoutes(w http.ResponseWriter, r *http.Request) {\n  w.Header().Set("Content-Type", "application/json")\n  fmt.Fprintf(w, `{"status": "ok"}`)\n}'),
-    ('Python Data Parser', 'Python', 'A script for parsing complex JSON data structures using standard libraries.', 'import json\n\ndef parse_data(raw_json):\n    try:\n        return json.loads(raw_json)\n    except json.JSONDecodeError as err:\n        print(f"Error parsing JSON: {err}")\n        return None')
-ON CONFLICT DO NOTHING;
+-- 4. Fast Query Indexes
+CREATE INDEX IF NOT EXISTS idx_snippets_user_id ON snippets (user_id);
+CREATE INDEX IF NOT EXISTS idx_snippets_language ON snippets (LOWER(language));

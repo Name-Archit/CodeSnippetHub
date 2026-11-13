@@ -9,6 +9,18 @@ export default function CodeViewer({
   const [copied, setCopied] = useState(false);
   const [wrapCode, setWrapCode] = useState(false);
 
+  // Hook Rule: Always call hooks at the top level before any early return!
+  const codeLines = useMemo(() => {
+    if (!snippet?.code) return [];
+    return snippet.code.split('\n');
+  }, [snippet?.code]);
+
+  const highlightedHtml = useMemo(() => {
+    if (!snippet?.code) return '';
+    return highlightSnippet(snippet.code, snippet.language);
+  }, [snippet?.code, snippet?.language]);
+
+  // Early return for empty selection state AFTER all hooks have executed
   if (!snippet) {
     return (
       <section className="w-[25%] bg-[#080d1a] p-6 text-slate-500 flex flex-col items-center justify-center h-full text-center">
@@ -30,14 +42,6 @@ export default function CodeViewer({
       console.error('Failed to copy code to clipboard:', err);
     }
   };
-
-  const codeLines = useMemo(() => {
-    return (snippet.code || '').split('\n');
-  }, [snippet.code]);
-
-  const highlightedHtml = useMemo(() => {
-    return highlightSnippet(snippet.code, snippet.language);
-  }, [snippet.code, snippet.language]);
 
   return (
     <section className="w-[25%] bg-[#080d1a] p-6 flex flex-col h-full overflow-hidden">

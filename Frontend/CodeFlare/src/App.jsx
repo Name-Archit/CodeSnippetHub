@@ -4,10 +4,14 @@ import SnippetFeed from './components/snippetFeed';
 import CodeViewer from './components/codeViewer';
 import SnippetModal from './components/snippetModal';
 import DeleteConfirmModal from './components/deleteConfirmModal';
+import AuthModal from './components/authModal';
 import { api } from './services/api';
 import { SAMPLE_SNIPPETS } from './mockData';
 
 export default function App() {
+  const [currentUser, setCurrentUser] = useState(null);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+
   const [snippets, setSnippets] = useState([]);
   const [selectedSnippet, setSelectedSnippet] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -30,7 +34,23 @@ export default function App() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  // Fetch live snippets
+  // Initial user session verification
+  useEffect(() => {
+    async function loadUserSession() {
+      try {
+        const user = await api.getMe();
+        if (user) {
+          setCurrentUser(user);
+        }
+      } catch (err) {
+        console.warn('Session verification failed or expired:', err.message);
+        api.logout();
+      }
+    }
+    loadUserSession();
+  }, []);
+
+  // Fetch snippets for current user context
   const fetchSnippets = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -59,14 +79,15 @@ export default function App() {
 
   useEffect(() => {
     fetchSnippets();
-  }, [fetchSnippets]);
+  }, [fetchSnippets, currentUser]);
 
-  // Global Keyboard Shortcuts (Escape to close modals, Alt+N for new snippet)
+  // Global Keyboard Shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
         setIsModalOpen(false);
         setIsDeleteOpen(false);
+        setIsAuthModalOpen(false);
       }
       if (e.altKey && e.key.toLowerCase() === 'n') {
         e.preventDefault();
@@ -78,6 +99,27 @@ export default function App() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  // Auth Handlers
+  const handleAuthSuccess = async ({ mode, username, email, password }) => {
+    if (mode === 'register') {
+      const res = await api.register({ username, email, password });
+      setCurrentUser(res.user);
+      showToast(`Welcome to CodeFlare, ${res.user.username}! 🚀`);
+    } else {
+      const res = await api.login({ email, password });
+      setCurrentUser(res.user);
+      showToast(`Welcome back, ${res.user.username}! 👋`);
+    }
+    fetchSnippets();
+  };
+
+  const handleLogout = () => {
+    api.logout();
+    setCurrentUser(null);
+    showToast('Signed out successfully', 'info');
+    fetchSnippets();
+  };
 
   // Fallback to sample mock data
   const handleUseMockData = () => {
@@ -158,6 +200,9 @@ export default function App() {
     <div className="flex h-screen w-screen overflow-hidden font-sans bg-[#080d1a] relative">
       {/* 1. Left Sidebar */}
       <Sidebar
+        user={currentUser}
+        onOpenAuth={() => setIsAuthModalOpen(true)}
+        onLogout={handleLogout}
         onCreateClick={handleOpenCreate}
         onUpdateClick={() => handleOpenEdit()}
         onDeleteClick={() => handleOpenDelete()}
@@ -179,6 +224,13 @@ export default function App() {
         snippet={selectedSnippet}
         onEditSnippet={handleOpenEdit}
         onDeleteSnippet={handleOpenDelete}
+      />
+
+      {/* Authentication Modal */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onSuccess={handleAuthSuccess}
       />
 
       {/* Create / Edit Modal */}

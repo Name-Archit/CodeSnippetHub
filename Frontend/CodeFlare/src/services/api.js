@@ -1,14 +1,19 @@
 // API Service Layer for CodeFlare
-// Base API URL can be overridden via Vite environment variables
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+const TOKEN_KEY = 'codeflare_auth_token';
 
 /**
- * Standard fetch wrapper with error handling and JSON parsing
+ * Standard fetch wrapper with JWT header injection and error handling
  */
 async function request(endpoint, options = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
+  
+  // Retrieve token if present in localStorage
+  const token = localStorage.getItem(TOKEN_KEY);
+
   const headers = {
     'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...(options.headers || {})
   };
 
@@ -29,33 +34,62 @@ async function request(endpoint, options = {}) {
 }
 
 export const api = {
-  /**
-   * Fetch all snippets
-   */
+  // --- AUTHENTICATION APIS ---
+
+  async register({ username, email, password }) {
+    const res = await request('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ username, email, password })
+    });
+    if (res.data?.token) {
+      localStorage.setItem(TOKEN_KEY, res.data.token);
+    }
+    return res.data;
+  },
+
+  async login({ email, password }) {
+    const res = await request('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password })
+    });
+    if (res.data?.token) {
+      localStorage.setItem(TOKEN_KEY, res.data.token);
+    }
+    return res.data;
+  },
+
+  async getMe() {
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (!token) return null;
+    const res = await request('/auth/me');
+    return res.data;
+  },
+
+  logout() {
+    localStorage.removeItem(TOKEN_KEY);
+  },
+
+  isAuthenticated() {
+    return Boolean(localStorage.getItem(TOKEN_KEY));
+  },
+
+  // --- SNIPPET CRUD APIS ---
+
   async getSnippets() {
     const res = await request('/snippets');
     return res.data || [];
   },
 
-  /**
-   * Fetch a single snippet by ID
-   */
   async getSnippetById(id) {
     const res = await request(`/snippets/${id}`);
     return res.data;
   },
 
-  /**
-   * Fetch snippets filtered by language
-   */
   async getSnippetsByLanguage(language) {
     const res = await request(`/snippets/language/${encodeURIComponent(language)}`);
     return res.data || [];
   },
 
-  /**
-   * Create a new snippet
-   */
   async createSnippet(snippetData) {
     const res = await request('/snippets', {
       method: 'POST',
@@ -64,9 +98,6 @@ export const api = {
     return res.data;
   },
 
-  /**
-   * Update an existing snippet
-   */
   async updateSnippet(id, snippetData) {
     const res = await request(`/snippets/${id}`, {
       method: 'PUT',
@@ -75,9 +106,6 @@ export const api = {
     return res.data;
   },
 
-  /**
-   * Delete a snippet
-   */
   async deleteSnippet(id) {
     const res = await request(`/snippets/${id}`, {
       method: 'DELETE'
