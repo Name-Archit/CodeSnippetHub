@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 
 function formatDate(dateVal) {
   if (!dateVal) return '';
@@ -20,34 +20,63 @@ export default function SnippetFeed({
   onRetry
 }) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedLanguage, setSelectedLanguage] = useState('ALL');
 
-  const filteredSnippets = snippets.filter((s) => {
-    const q = searchQuery.toLowerCase();
-    const titleMatch = s.title?.toLowerCase().includes(q);
-    const langMatch = s.language?.toLowerCase().includes(q);
-    const descMatch = s.description?.toLowerCase().includes(q);
-    return titleMatch || langMatch || descMatch;
-  });
+  // Dynamically extract unique languages and counts from the current snippet collection
+  const languageOptions = useMemo(() => {
+    const counts = {};
+    snippets.forEach((s) => {
+      const lang = s.language?.trim() || 'Other';
+      counts[lang] = (counts[lang] || 0) + 1;
+    });
+
+    const list = Object.entries(counts).map(([name, count]) => ({
+      name,
+      count
+    }));
+
+    return [{ name: 'ALL', count: snippets.length }, ...list];
+  }, [snippets]);
+
+  // Combined filter: Language Pill + Search Query
+  const filteredSnippets = useMemo(() => {
+    return snippets.filter((s) => {
+      const matchesLang =
+        selectedLanguage === 'ALL' ||
+        s.language?.toLowerCase() === selectedLanguage.toLowerCase();
+
+      if (!matchesLang) return false;
+
+      if (!searchQuery.trim()) return true;
+
+      const q = searchQuery.toLowerCase();
+      const titleMatch = s.title?.toLowerCase().includes(q);
+      const descMatch = s.description?.toLowerCase().includes(q);
+      const codeMatch = s.code?.toLowerCase().includes(q);
+      return titleMatch || descMatch || codeMatch;
+    });
+  }, [snippets, selectedLanguage, searchQuery]);
 
   return (
     <main className="w-[60%] bg-[#0b132b] p-6 border-r border-slate-800 flex flex-col h-full overflow-hidden">
-      {/* Header and Search */}
-      <div className="mb-6 flex flex-col gap-3">
+      {/* Header */}
+      <div className="mb-4 flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-white tracking-wide">
             CODE SNIPPETS
             <span className="ml-3 text-xs font-normal px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
-              {snippets.length} {snippets.length === 1 ? 'item' : 'items'}
+              {filteredSnippets.length} of {snippets.length}
             </span>
           </h1>
         </div>
 
+        {/* Search Input */}
         <div className="relative">
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by title, language, or keyword..."
+            placeholder="Search by title, description, or code content..."
             className="w-full bg-[#121b35] border border-slate-800 rounded-lg px-4 py-2.5 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-red-500/60 transition-colors"
           />
           {searchQuery && (
@@ -59,11 +88,36 @@ export default function SnippetFeed({
             </button>
           )}
         </div>
+
+        {/* Dynamic Language Filter Chips */}
+        {languageOptions.length > 1 && (
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 pt-0.5 no-scrollbar">
+            {languageOptions.map((opt) => {
+              const isActive = selectedLanguage === opt.name;
+              return (
+                <button
+                  key={opt.name}
+                  onClick={() => setSelectedLanguage(opt.name)}
+                  className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all border ${
+                    isActive
+                      ? 'bg-red-600/20 text-red-400 border-red-500/40 shadow-sm'
+                      : 'bg-[#121b35] text-slate-400 border-slate-800 hover:border-slate-700 hover:text-slate-300'
+                  }`}
+                >
+                  {opt.name}{' '}
+                  <span className="text-[10px] opacity-70 ml-0.5">
+                    ({opt.count})
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
-      {/* Content Area */}
+      {/* Content Feed List */}
       <div className="flex-1 overflow-y-auto space-y-3 pr-1">
-        {/* Loading Skeleton */}
+        {/* Loading Skeletons */}
         {loading && (
           <div className="space-y-3">
             {[1, 2, 3].map((n) => (
@@ -98,17 +152,28 @@ export default function SnippetFeed({
         {/* Empty State */}
         {!loading && !error && filteredSnippets.length === 0 && (
           <div className="h-64 flex flex-col items-center justify-center text-center p-6 border border-dashed border-slate-800 rounded-xl text-slate-500">
-            <span className="text-3xl mb-2">📂</span>
-            <p className="text-sm font-medium text-slate-400">No snippets found</p>
-            <p className="text-xs text-slate-500 mt-1">
-              {searchQuery
-                ? `No results matching "${searchQuery}"`
-                : 'Create your first snippet to get started!'}
+            <span className="text-3xl mb-2">🔍</span>
+            <p className="text-sm font-medium text-slate-400">No matching snippets</p>
+            <p className="text-xs text-slate-500 mt-1 max-w-sm">
+              {searchQuery || selectedLanguage !== 'ALL'
+                ? 'Try broadening your search keywords or switching language filters.'
+                : 'Click "+ Create New" in the sidebar to add your first snippet.'}
             </p>
+            {(searchQuery || selectedLanguage !== 'ALL') && (
+              <button
+                onClick={() => {
+                  setSearchQuery('');
+                  setSelectedLanguage('ALL');
+                }}
+                className="mt-3 px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs rounded-lg transition-colors"
+              >
+                Reset Filters
+              </button>
+            )}
           </div>
         )}
 
-        {/* Snippet List */}
+        {/* Snippet Card List */}
         {!loading &&
           !error &&
           filteredSnippets.map((snippet) => {

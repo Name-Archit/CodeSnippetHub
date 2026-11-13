@@ -22,7 +22,7 @@ export default function App() {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Feedback Toast State
+  // Global Toast
   const [toast, setToast] = useState(null);
 
   const showToast = (message, type = 'success') => {
@@ -30,7 +30,7 @@ export default function App() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  // Fetch snippets from live backend
+  // Fetch live snippets
   const fetchSnippets = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -61,7 +61,25 @@ export default function App() {
     fetchSnippets();
   }, [fetchSnippets]);
 
-  // Fallback to sample mock data if backend is offline during early testing
+  // Global Keyboard Shortcuts (Escape to close modals, Alt+N for new snippet)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setIsModalOpen(false);
+        setIsDeleteOpen(false);
+      }
+      if (e.altKey && e.key.toLowerCase() === 'n') {
+        e.preventDefault();
+        setModalMode('create');
+        setIsModalOpen(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Fallback to sample mock data
   const handleUseMockData = () => {
     setSnippets(SAMPLE_SNIPPETS);
     setSelectedSnippet(SAMPLE_SNIPPETS[0]);
@@ -91,7 +109,7 @@ export default function App() {
     setIsDeleteOpen(true);
   };
 
-  // Save (Create or Update)
+  // Submit Create or Update
   const handleModalSubmit = async (formData) => {
     setIsSubmitting(true);
     try {
@@ -156,7 +174,7 @@ export default function App() {
         onRetry={fetchSnippets}
       />
 
-      {/* 3. Right Code Viewer */}
+      {/* 3. Right Code Viewer with Syntax Highlighting */}
       <CodeViewer
         snippet={selectedSnippet}
         onEditSnippet={handleOpenEdit}
@@ -186,7 +204,7 @@ export default function App() {
         <div className="fixed top-4 right-4 bg-[#121b35] border border-red-500/40 text-slate-200 text-xs px-4 py-3 rounded-xl shadow-2xl flex items-center gap-4 z-50">
           <div>
             <p className="font-semibold text-red-400">Backend Server Offline</p>
-            <p className="text-[11px] text-slate-400">Start your backend: cd Backend && npm run dev</p>
+            <p className="text-[11px] text-slate-400">Run: cd Backend && npm run dev</p>
           </div>
           <button
             onClick={handleUseMockData}

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { highlightSnippet, getPrismLanguage } from '../utils/prismHelper';
 
 export default function CodeViewer({
   snippet,
@@ -6,6 +7,7 @@ export default function CodeViewer({
   onDeleteSnippet
 }) {
   const [copied, setCopied] = useState(false);
+  const [wrapCode, setWrapCode] = useState(false);
 
   if (!snippet) {
     return (
@@ -29,7 +31,13 @@ export default function CodeViewer({
     }
   };
 
-  const lineCount = (snippet.code || '').split('\n').length;
+  const codeLines = useMemo(() => {
+    return (snippet.code || '').split('\n');
+  }, [snippet.code]);
+
+  const highlightedHtml = useMemo(() => {
+    return highlightSnippet(snippet.code, snippet.language);
+  }, [snippet.code, snippet.language]);
 
   return (
     <section className="w-[25%] bg-[#080d1a] p-6 flex flex-col h-full overflow-hidden">
@@ -44,13 +52,14 @@ export default function CodeViewer({
               {snippet.language}
             </span>
             <span className="text-xs text-slate-500">
-              {lineCount} {lineCount === 1 ? 'line' : 'lines'}
+              {codeLines.length} {codeLines.length === 1 ? 'line' : 'lines'}
             </span>
           </div>
         </div>
 
-        {/* Action Buttons: Copy, Edit, Delete */}
+        {/* Action Controls */}
         <div className="flex items-center gap-1.5 shrink-0">
+          {/* Edit */}
           {onEditSnippet && (
             <button
               onClick={() => onEditSnippet(snippet)}
@@ -61,6 +70,7 @@ export default function CodeViewer({
             </button>
           )}
 
+          {/* Delete */}
           {onDeleteSnippet && (
             <button
               onClick={() => onDeleteSnippet(snippet)}
@@ -71,6 +81,7 @@ export default function CodeViewer({
             </button>
           )}
 
+          {/* Copy */}
           <button
             onClick={handleCopy}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all flex items-center gap-1.5 ${
@@ -92,11 +103,44 @@ export default function CodeViewer({
         </div>
       </div>
 
-      {/* Code Display Area */}
-      <div className="flex-1 bg-[#050811] border border-slate-800 rounded-xl p-4 overflow-auto font-mono text-xs text-slate-200">
-        <pre className="leading-relaxed whitespace-pre font-mono">
-          <code>{snippet.code}</code>
-        </pre>
+      {/* Code Toolbar */}
+      <div className="flex items-center justify-between text-[11px] text-slate-500 mb-2 px-1">
+        <span>Syntax: {getPrismLanguage(snippet.language)}</span>
+        <button
+          onClick={() => setWrapCode((prev) => !prev)}
+          className={`px-2 py-0.5 rounded border transition-colors ${
+            wrapCode
+              ? 'bg-slate-800 text-slate-300 border-slate-700'
+              : 'text-slate-500 border-transparent hover:text-slate-400'
+          }`}
+          title="Toggle soft wrapping"
+        >
+          {wrapCode ? 'Wrap: On' : 'Wrap: Off'}
+        </button>
+      </div>
+
+      {/* Code Display Area with Syntax Highlighting & Line Gutter */}
+      <div className="flex-1 bg-[#050811] border border-slate-800 rounded-xl overflow-auto font-mono text-xs flex">
+        {/* Line Numbers Gutter */}
+        <div className="select-none py-4 pl-3 pr-2 text-right text-slate-600 bg-[#070b16] border-r border-slate-800/80 font-mono text-[11px] leading-relaxed">
+          {codeLines.map((_, idx) => (
+            <div key={idx}>{idx + 1}</div>
+          ))}
+        </div>
+
+        {/* Highlighted Code */}
+        <div className="flex-1 p-4 overflow-auto">
+          <pre
+            className={`leading-relaxed font-mono text-slate-200 ${
+              wrapCode ? 'whitespace-pre-wrap break-all' : 'whitespace-pre'
+            }`}
+          >
+            <code
+              dangerouslySetInnerHTML={{ __html: highlightedHtml }}
+              className={`language-${getPrismLanguage(snippet.language)}`}
+            />
+          </pre>
+        </div>
       </div>
     </section>
   );
