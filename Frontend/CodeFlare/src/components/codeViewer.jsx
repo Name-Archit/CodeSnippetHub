@@ -1,28 +1,75 @@
-import React from 'react';
+import React, { useState } from 'react';
 
-export default function CodeViewer({ snippet }) {
+export default function CodeViewer({ snippet, onDeleteSnippet }) {
+  const [copied, setCopied] = useState(false);
+
   if (!snippet) {
     return (
-      <section className="w-[25%] bg-[#080d1a] p-6 text-slate-500 flex items-center justify-center h-full">
-        Select a snippet to view code
+      <section className="w-[25%] bg-[#080d1a] p-6 text-slate-500 flex flex-col items-center justify-center h-full text-center">
+        <span className="text-4xl mb-3 opacity-40">&lt;/&gt;</span>
+        <p className="text-sm font-medium text-slate-400">No snippet selected</p>
+        <p className="text-xs text-slate-600 mt-1">
+          Click on any snippet from the feed to inspect and copy its code.
+        </p>
       </section>
     );
   }
 
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(snippet.code || '');
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy code to clipboard:', err);
+    }
+  };
+
+  const lineCount = (snippet.code || '').split('\n').length;
+
   return (
-    <section className="w-[30%] bg-[#080d1a] p-6 flex flex-col h-full">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold text-white truncate">{snippet.title}</h2>
+    <section className="w-[25%] bg-[#080d1a] p-6 flex flex-col h-full overflow-hidden">
+      {/* Top Header */}
+      <div className="flex justify-between items-start mb-4 gap-2">
+        <div className="overflow-hidden">
+          <h2 className="text-xl font-bold text-white truncate" title={snippet.title}>
+            {snippet.title}
+          </h2>
+          <div className="flex items-center gap-2 mt-1">
+            <span className="text-xs font-semibold px-2 py-0.5 rounded bg-red-500/10 text-red-400 border border-red-500/20">
+              {snippet.language}
+            </span>
+            <span className="text-xs text-slate-500">
+              {lineCount} {lineCount === 1 ? 'line' : 'lines'}
+            </span>
+          </div>
+        </div>
+
         <button
-          onClick={() => navigator.clipboard.writeText(snippet.code)}
-          className="px-3 py-1.5 bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-500/30 rounded-lg text-xs font-medium transition-colors"
+          onClick={handleCopy}
+          className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all flex items-center gap-1.5 ${
+            copied
+              ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400 shadow-sm'
+              : 'bg-red-600/20 hover:bg-red-600/30 text-red-400 border-red-500/30 active:scale-95'
+          }`}
         >
-          Copy Code
+          {copied ? (
+            <>
+              <span>✓</span> Copied!
+            </>
+          ) : (
+            <>
+              <span>📋</span> Copy Code
+            </>
+          )}
         </button>
       </div>
 
-      <div className="flex-1 bg-[#050811] border border-slate-800 rounded-xl p-4 overflow-x-auto font-mono text-sm text-slate-200">
-        <pre>{snippet.code}</pre>
+      {/* Code Display Area with Line Numbers */}
+      <div className="flex-1 bg-[#050811] border border-slate-800 rounded-xl p-4 overflow-auto font-mono text-xs text-slate-200">
+        <pre className="leading-relaxed whitespace-pre font-mono">
+          <code>{snippet.code}</code>
+        </pre>
       </div>
     </section>
   );

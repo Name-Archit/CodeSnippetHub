@@ -56,7 +56,7 @@ const getSnippetByID = async (req, res) => {
         const { id } = req.params;                
         const snippet = await snippetService.getSnippetByID(id); 
 
-        if (snippet === -1) {
+        if (!snippet) {
             return res.status(404).json({
                 success: false,
                 message: "THERE IS NO SNIPPET WITH THIS ID",
@@ -79,35 +79,41 @@ const getSnippetByID = async (req, res) => {
     }
 };
 
-const getSnippetByLanguage =async (req, res) => {
+const getSnippetByLanguage = async (req, res) => {
     try {
-    const { language } = req.params;
-    const snippets = await snippetService.getAllSnippets();
+        const { language } = req.params;
 
-    const filteredSnippets = await snippetService.getSnippetByLanguage(language);
+        if (!language || !language.trim()) {
+            return res.status(400).json({
+                success: false,
+                message: "Language parameter is required",
+                data: null
+            });
+        }
 
-    if(!language || !language.trim() || filteredSnippets.length === 0){
-        return res.status(404).json({
-            success: false,
-            message: "No snippets found for the this language",
-            data: null
+        const filteredSnippets = await snippetService.getSnippetByLanguage(language);
+
+        if (filteredSnippets.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: `No snippets found for language: ${language}`,
+                data: []
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Snippets with specified language found successfully",
+            data: filteredSnippets
         });
-    }
-
-    res.status(200).json({
-        success: true,
-        message: "snippets with specified language found successfully",
-        data: filteredSnippets
-    });
-    }catch(error){
-        console.error("Error fetching snippet:", error);
+    } catch (error) {
+        console.error("Error fetching snippets by language:", error);
         res.status(500).json({
             success: false,
             message: "Internal server error",
             data: null
         });
     }
-   
 };
 
 const updateSnippet = async (req, res) => {
@@ -146,7 +152,7 @@ const deleteSnippet = async (req, res) => {
     const deleteSnippet = await snippetService.deleteSnippet(id);
 
     if(!deleteSnippet){
-        returnres.status(404).json({
+        return res.status(404).json({
             success: false,
             message: "Snippet not found no deletion took place",
             data: null

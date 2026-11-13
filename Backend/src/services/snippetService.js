@@ -14,12 +14,12 @@ const getAllSnippets = async () => {
 
 const getSnippetByID = async (id) => {
     const result = await pool.query("SELECT * FROM snippets WHERE id = $1", [parseInt(id)]);
-    return result.rows[0] || -1;
+    return result.rows[0] || null;
 };
 
 const getSnippetByLanguage = async ( language ) => {
-    const result = await pool.query("SELECT * FROM snippets WHERE language = $1", [language]);
-    return result.rows.length > 0 ? result : null;
+    const result = await pool.query("SELECT * FROM snippets WHERE LOWER(language) = LOWER($1)", [language]);
+    return result.rows;
 }
 
 const updateSnippet = async (id, updatedData) => {
