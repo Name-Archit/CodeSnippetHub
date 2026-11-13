@@ -1,4 +1,5 @@
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const { Pool } = require('pg');
 
 const pool = new Pool({
@@ -9,7 +10,6 @@ const pool = new Pool({
     port: parseInt(process.env.DB_PORT, 10) || 5432
 });
 
-// Test DB connection on startup
 pool.on('error', (err) => {
     console.error('Unexpected error on idle PostgreSQL client:', err);
 });

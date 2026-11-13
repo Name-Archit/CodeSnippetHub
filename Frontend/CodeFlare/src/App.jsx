@@ -12,6 +12,10 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
+  // Responsive Navigation State
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [mobileTab, setMobileTab] = useState('feed'); // 'feed' | 'viewer'
+
   const [snippets, setSnippets] = useState([]);
   const [selectedSnippet, setSelectedSnippet] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -88,6 +92,7 @@ export default function App() {
         setIsModalOpen(false);
         setIsDeleteOpen(false);
         setIsAuthModalOpen(false);
+        setIsMobileSidebarOpen(false);
       }
       if (e.altKey && e.key.toLowerCase() === 'n') {
         e.preventDefault();
@@ -99,6 +104,12 @@ export default function App() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  // When a snippet is clicked on mobile, automatically navigate to viewer tab
+  const handleSelectSnippet = (snippet) => {
+    setSelectedSnippet(snippet);
+    setMobileTab('viewer');
+  };
 
   // Auth Handlers
   const handleAuthSuccess = async ({ mode, username, email, password }) => {
@@ -159,6 +170,7 @@ export default function App() {
         const newSnippet = await api.createSnippet(formData);
         setSnippets((prev) => [newSnippet, ...prev]);
         setSelectedSnippet(newSnippet);
+        setMobileTab('viewer');
         showToast('Snippet created successfully! 🚀');
       } else {
         const updated = await api.updateSnippet(selectedSnippet.id, formData);
@@ -187,6 +199,7 @@ export default function App() {
       setSnippets(remaining);
       setSelectedSnippet(remaining.length > 0 ? remaining[0] : null);
       setIsDeleteOpen(false);
+      setMobileTab('feed');
       showToast('Snippet deleted successfully 🗑');
     } catch (err) {
       console.error('Failed to delete snippet:', err);
@@ -197,34 +210,95 @@ export default function App() {
   };
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden font-sans bg-[#080d1a] relative">
-      {/* 1. Left Sidebar */}
-      <Sidebar
-        user={currentUser}
-        onOpenAuth={() => setIsAuthModalOpen(true)}
-        onLogout={handleLogout}
-        onCreateClick={handleOpenCreate}
-        onUpdateClick={() => handleOpenEdit()}
-        onDeleteClick={() => handleOpenDelete()}
-        hasSelectedSnippet={Boolean(selectedSnippet)}
-      />
+    <div className="flex flex-col h-screen w-screen overflow-hidden font-sans bg-[#080d1a] relative">
+      {/* Mobile Top App Bar (Visible on mobile & tablets < 1024px) */}
+      <header className="lg:hidden flex items-center justify-between px-4 py-3 bg-[#080d1a] border-b border-slate-800 z-20 shrink-0">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setIsMobileSidebarOpen(true)}
+            className="p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
+            aria-label="Open menu"
+          >
+            <span className="text-xl">☰</span>
+          </button>
+          <div className="flex items-center gap-1.5 text-red-500 font-bold text-lg tracking-wider">
+            <span className="font-mono">&lt;/&gt;</span> CODEFLARE
+          </div>
+        </div>
 
-      {/* 2. Middle Snippet Feed */}
-      <SnippetFeed
-        snippets={snippets}
-        selectedSnippet={selectedSnippet}
-        onSelectSnippet={setSelectedSnippet}
-        loading={loading}
-        error={error}
-        onRetry={fetchSnippets}
-      />
+        {/* Mobile View Toggle Pills (Only on small screens < 768px) */}
+        <div className="flex md:hidden items-center bg-[#0d1527] border border-slate-800 rounded-lg p-0.5 text-xs">
+          <button
+            onClick={() => setMobileTab('feed')}
+            className={`px-2.5 py-1 rounded-md transition-all font-medium ${
+              mobileTab === 'feed'
+                ? 'bg-red-600 text-white shadow-sm'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            Feed
+          </button>
+          <button
+            onClick={() => setMobileTab('viewer')}
+            className={`px-2.5 py-1 rounded-md transition-all font-medium ${
+              mobileTab === 'viewer'
+                ? 'bg-red-600 text-white shadow-sm'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            Code
+          </button>
+        </div>
 
-      {/* 3. Right Code Viewer with Syntax Highlighting */}
-      <CodeViewer
-        snippet={selectedSnippet}
-        onEditSnippet={handleOpenEdit}
-        onDeleteSnippet={handleOpenDelete}
-      />
+        <button
+          onClick={handleOpenCreate}
+          className="p-1.5 sm:px-3 sm:py-1 rounded-lg bg-red-600/20 text-red-400 border border-red-500/30 text-xs font-semibold hover:bg-red-600/30 transition-all flex items-center gap-1"
+        >
+          <span>+</span> <span className="hidden sm:inline">New</span>
+        </button>
+      </header>
+
+      {/* Main Workspace Body */}
+      <div className="flex flex-1 overflow-hidden relative">
+        {/* 1. Sidebar (Desktop Persistent + Mobile Drawer) */}
+        <Sidebar
+          user={currentUser}
+          isOpen={isMobileSidebarOpen}
+          onClose={() => setIsMobileSidebarOpen(false)}
+          onOpenAuth={() => setIsAuthModalOpen(true)}
+          onLogout={handleLogout}
+          onCreateClick={handleOpenCreate}
+          onUpdateClick={() => handleOpenEdit()}
+          onDeleteClick={() => handleOpenDelete()}
+          hasSelectedSnippet={Boolean(selectedSnippet)}
+        />
+
+        {/* 2. Middle Snippet Feed */}
+        <SnippetFeed
+          snippets={snippets}
+          selectedSnippet={selectedSnippet}
+          onSelectSnippet={handleSelectSnippet}
+          loading={loading}
+          error={error}
+          onRetry={fetchSnippets}
+          className={`
+            ${mobileTab === 'feed' ? 'flex flex-1' : 'hidden'}
+            md:flex md:w-1/2 lg:w-auto lg:flex-1
+          `}
+        />
+
+        {/* 3. Right Code Viewer */}
+        <CodeViewer
+          snippet={selectedSnippet}
+          onEditSnippet={handleOpenEdit}
+          onDeleteSnippet={handleOpenDelete}
+          onBack={() => setMobileTab('feed')}
+          className={`
+            ${mobileTab === 'viewer' ? 'flex flex-1' : 'hidden'}
+            md:flex md:w-1/2 lg:w-[45%] xl:w-[48%]
+          `}
+        />
+      </div>
 
       {/* Authentication Modal */}
       <AuthModal
@@ -253,16 +327,16 @@ export default function App() {
 
       {/* Offline Fallback Banner */}
       {error && !isUsingMock && (
-        <div className="fixed top-4 right-4 bg-[#121b35] border border-red-500/40 text-slate-200 text-xs px-4 py-3 rounded-xl shadow-2xl flex items-center gap-4 z-50">
+        <div className="fixed top-16 sm:top-4 right-4 bg-[#121b35] border border-red-500/40 text-slate-200 text-xs px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 z-50">
           <div>
             <p className="font-semibold text-red-400">Backend Server Offline</p>
             <p className="text-[11px] text-slate-400">Run: cd Backend && npm run dev</p>
           </div>
           <button
             onClick={handleUseMockData}
-            className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-medium transition-colors"
+            className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-medium transition-colors shrink-0"
           >
-            Load Sample Data
+            Mock Data
           </button>
         </div>
       )}
@@ -270,7 +344,7 @@ export default function App() {
       {/* Global Notification Toast */}
       {toast && (
         <div
-          className={`fixed bottom-6 right-6 z-50 px-4 py-2.5 rounded-xl border text-xs font-semibold shadow-2xl backdrop-blur-md transition-all flex items-center gap-2 ${
+          className={`fixed bottom-4 sm:bottom-6 right-4 sm:right-6 z-50 px-4 py-2.5 rounded-xl border text-xs font-semibold shadow-2xl backdrop-blur-md transition-all flex items-center gap-2 max-w-[90vw] ${
             toast.type === 'error'
               ? 'bg-red-950/80 border-red-500/60 text-red-200'
               : toast.type === 'info'
@@ -279,7 +353,7 @@ export default function App() {
           }`}
         >
           <span>{toast.type === 'error' ? '❌' : toast.type === 'info' ? 'ℹ️' : '✓'}</span>
-          <span>{toast.message}</span>
+          <span className="truncate">{toast.message}</span>
         </div>
       )}
     </div>

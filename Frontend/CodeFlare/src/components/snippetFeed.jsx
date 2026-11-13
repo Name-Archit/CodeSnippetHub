@@ -17,12 +17,13 @@ export default function SnippetFeed({
   onSelectSnippet,
   loading = false,
   error = null,
-  onRetry
+  onRetry,
+  className = ''
 }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLanguage, setSelectedLanguage] = useState('ALL');
 
-  // Dynamically extract unique languages and counts from the current snippet collection
+  // Dynamically extract unique languages and counts
   const languageOptions = useMemo(() => {
     const counts = {};
     snippets.forEach((s) => {
@@ -58,13 +59,15 @@ export default function SnippetFeed({
   }, [snippets, selectedLanguage, searchQuery]);
 
   return (
-    <main className="w-[60%] bg-[#0b132b] p-6 border-r border-slate-800 flex flex-col h-full overflow-hidden">
+    <main
+      className={`bg-[#0b132b] p-4 sm:p-6 border-r border-slate-800 flex flex-col h-full overflow-hidden ${className}`}
+    >
       {/* Header */}
       <div className="mb-4 flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-white tracking-wide">
+          <h1 className="text-xl sm:text-2xl font-bold text-white tracking-wide">
             CODE SNIPPETS
-            <span className="ml-3 text-xs font-normal px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+            <span className="ml-2.5 text-xs font-normal px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
               {filteredSnippets.length} of {snippets.length}
             </span>
           </h1>
@@ -76,8 +79,8 @@ export default function SnippetFeed({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by title, description, or code content..."
-            className="w-full bg-[#121b35] border border-slate-800 rounded-lg px-4 py-2.5 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-red-500/60 transition-colors"
+            placeholder="Search by title, description, or code..."
+            className="w-full bg-[#121b35] border border-slate-800 rounded-lg px-3.5 sm:px-4 py-2 sm:py-2.5 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-red-500/60 transition-colors"
           />
           {searchQuery && (
             <button
@@ -91,14 +94,14 @@ export default function SnippetFeed({
 
         {/* Dynamic Language Filter Chips */}
         {languageOptions.length > 1 && (
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 pt-0.5 no-scrollbar">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 pt-0.5 no-scrollbar scroll-smooth">
             {languageOptions.map((opt) => {
               const isActive = selectedLanguage === opt.name;
               return (
                 <button
                   key={opt.name}
                   onClick={() => setSelectedLanguage(opt.name)}
-                  className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all border ${
+                  className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all border shrink-0 ${
                     isActive
                       ? 'bg-red-600/20 text-red-400 border-red-500/40 shadow-sm'
                       : 'bg-[#121b35] text-slate-400 border-slate-800 hover:border-slate-700 hover:text-slate-300'
@@ -123,7 +126,7 @@ export default function SnippetFeed({
             {[1, 2, 3].map((n) => (
               <div
                 key={n}
-                className="p-5 rounded-xl border border-slate-800/80 bg-[#121b35]/60 animate-pulse"
+                className="p-4 sm:p-5 rounded-xl border border-slate-800/80 bg-[#121b35]/60 animate-pulse"
               >
                 <div className="h-4 bg-slate-700/60 rounded w-1/3 mb-3"></div>
                 <div className="h-3 bg-slate-800 rounded w-1/5 mb-3"></div>
@@ -135,7 +138,7 @@ export default function SnippetFeed({
 
         {/* Error State */}
         {!loading && error && (
-          <div className="p-6 rounded-xl border border-red-500/30 bg-red-950/20 text-center space-y-3">
+          <div className="p-5 sm:p-6 rounded-xl border border-red-500/30 bg-red-950/20 text-center space-y-3">
             <p className="text-red-400 font-medium text-sm">Failed to load snippets</p>
             <p className="text-xs text-slate-400">{error}</p>
             {onRetry && (
@@ -157,7 +160,7 @@ export default function SnippetFeed({
             <p className="text-xs text-slate-500 mt-1 max-w-sm">
               {searchQuery || selectedLanguage !== 'ALL'
                 ? 'Try broadening your search keywords or switching language filters.'
-                : 'Click "+ Create New" in the sidebar to add your first snippet.'}
+                : 'Create your first snippet to get started!'}
             </p>
             {(searchQuery || selectedLanguage !== 'ALL') && (
               <button
@@ -186,7 +189,7 @@ export default function SnippetFeed({
               <div
                 key={snippet.id}
                 onClick={() => onSelectSnippet(snippet)}
-                className={`p-5 rounded-xl border cursor-pointer transition-all duration-150 ${
+                className={`p-4 sm:p-5 rounded-xl border cursor-pointer transition-all duration-150 ${
                   isSelected
                     ? 'bg-[#1c2541] border-red-500/60 shadow-lg shadow-red-950/20'
                     : 'bg-[#121b35] border-slate-800/80 hover:border-slate-700 hover:bg-[#152040]'
@@ -203,7 +206,7 @@ export default function SnippetFeed({
                   )}
                 </div>
 
-                <div className="flex items-center gap-2 mb-2.5">
+                <div className="flex items-center gap-2 mb-2">
                   <span className="inline-block px-2.5 py-0.5 rounded text-xs font-semibold bg-red-500/10 text-red-400 border border-red-500/20">
                     {snippet.language}
                   </span>

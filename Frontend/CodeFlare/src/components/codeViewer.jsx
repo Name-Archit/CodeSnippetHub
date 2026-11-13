@@ -4,12 +4,14 @@ import { highlightSnippet, getPrismLanguage } from '../utils/prismHelper';
 export default function CodeViewer({
   snippet,
   onEditSnippet,
-  onDeleteSnippet
+  onDeleteSnippet,
+  onBack,
+  className = ''
 }) {
   const [copied, setCopied] = useState(false);
   const [wrapCode, setWrapCode] = useState(false);
 
-  // Hook Rule: Always call hooks at the top level before any early return!
+  // Hook Rule: Always call hooks at the top level
   const codeLines = useMemo(() => {
     if (!snippet?.code) return [];
     return snippet.code.split('\n');
@@ -23,12 +25,22 @@ export default function CodeViewer({
   // Early return for empty selection state AFTER all hooks have executed
   if (!snippet) {
     return (
-      <section className="w-[25%] bg-[#080d1a] p-6 text-slate-500 flex flex-col items-center justify-center h-full text-center">
+      <section
+        className={`bg-[#080d1a] p-6 text-slate-500 flex flex-col items-center justify-center h-full text-center ${className}`}
+      >
         <span className="text-4xl mb-3 opacity-40">&lt;/&gt;</span>
         <p className="text-sm font-medium text-slate-400">No snippet selected</p>
-        <p className="text-xs text-slate-600 mt-1 max-w-[200px]">
+        <p className="text-xs text-slate-600 mt-1 max-w-[220px]">
           Click on any snippet from the feed to inspect, edit, or copy its code.
         </p>
+        {onBack && (
+          <button
+            onClick={onBack}
+            className="md:hidden mt-4 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-medium transition-colors"
+          >
+            ← View Snippet List
+          </button>
+        )}
       </section>
     );
   }
@@ -44,11 +56,28 @@ export default function CodeViewer({
   };
 
   return (
-    <section className="w-[25%] bg-[#080d1a] p-6 flex flex-col h-full overflow-hidden">
+    <section
+      className={`bg-[#080d1a] p-4 sm:p-6 flex flex-col h-full overflow-hidden ${className}`}
+    >
+      {/* Mobile Back Button (Visible only on small screens when onBack is passed) */}
+      {onBack && (
+        <div className="md:hidden mb-3">
+          <button
+            onClick={onBack}
+            className="text-xs text-slate-400 hover:text-white flex items-center gap-1.5 py-1 px-2 rounded-lg bg-slate-800/80 border border-slate-700"
+          >
+            <span>←</span> Back to Snippets
+          </button>
+        </div>
+      )}
+
       {/* Top Header */}
       <div className="flex justify-between items-start mb-4 gap-2">
-        <div className="overflow-hidden">
-          <h2 className="text-xl font-bold text-white truncate" title={snippet.title}>
+        <div className="overflow-hidden flex-1">
+          <h2
+            className="text-lg sm:text-xl font-bold text-white truncate"
+            title={snippet.title}
+          >
             {snippet.title}
           </h2>
           <div className="flex items-center gap-2 mt-1">
@@ -67,7 +96,7 @@ export default function CodeViewer({
           {onEditSnippet && (
             <button
               onClick={() => onEditSnippet(snippet)}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors border border-transparent hover:border-slate-700"
+              className="p-1.5 sm:p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors border border-transparent hover:border-slate-700"
               title="Edit Snippet"
             >
               ✎
@@ -78,7 +107,7 @@ export default function CodeViewer({
           {onDeleteSnippet && (
             <button
               onClick={() => onDeleteSnippet(snippet)}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-950/30 transition-colors border border-transparent hover:border-red-900/50"
+              className="p-1.5 sm:p-2 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-950/30 transition-colors border border-transparent hover:border-red-900/50"
               title="Delete Snippet"
             >
               🗑
@@ -96,11 +125,11 @@ export default function CodeViewer({
           >
             {copied ? (
               <>
-                <span>✓</span> Copied!
+                <span>✓</span> <span className="hidden sm:inline">Copied!</span>
               </>
             ) : (
               <>
-                <span>📋</span> Copy
+                <span>📋</span> <span>Copy</span>
               </>
             )}
           </button>
@@ -126,14 +155,14 @@ export default function CodeViewer({
       {/* Code Display Area with Syntax Highlighting & Line Gutter */}
       <div className="flex-1 bg-[#050811] border border-slate-800 rounded-xl overflow-auto font-mono text-xs flex">
         {/* Line Numbers Gutter */}
-        <div className="select-none py-4 pl-3 pr-2 text-right text-slate-600 bg-[#070b16] border-r border-slate-800/80 font-mono text-[11px] leading-relaxed">
+        <div className="select-none py-4 pl-2.5 sm:pl-3 pr-2 text-right text-slate-600 bg-[#070b16] border-r border-slate-800/80 font-mono text-[11px] leading-relaxed shrink-0">
           {codeLines.map((_, idx) => (
             <div key={idx}>{idx + 1}</div>
           ))}
         </div>
 
         {/* Highlighted Code */}
-        <div className="flex-1 p-4 overflow-auto">
+        <div className="flex-1 p-3.5 sm:p-4 overflow-auto">
           <pre
             className={`leading-relaxed font-mono text-slate-200 ${
               wrapCode ? 'whitespace-pre-wrap break-all' : 'whitespace-pre'

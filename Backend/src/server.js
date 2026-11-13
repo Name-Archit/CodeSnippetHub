@@ -1,7 +1,9 @@
-require("dotenv").config();
+const path = require("path");
+require("dotenv").config({ path: path.resolve(__dirname, "../.env") });
 const express = require("express");
 const cors = require("cors");
 
+const migrateDatabase = require("../config/migrate");
 const authRoutes = require("./routes/authRoutes");
 const snippetRoutes = require("./routes/snippetRoutes");
 
@@ -41,6 +43,12 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
-});
+// Initialize Database Schema on Boot and Start Server
+const startServer = async () => {
+    await migrateDatabase();
+    app.listen(PORT, () => {
+        console.log(`Server is running on http://localhost:${PORT}`);
+    });
+};
+
+startServer();
