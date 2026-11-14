@@ -2,35 +2,37 @@
 const TOKEN_KEY = 'codeflare_auth_token';
 
 /**
- * Intelligent Base API URL Resolution:
- * 1. Honors explicit VITE_API_BASE_URL environment variable if set.
- * 2. Automatically detects environment via hostname:
- *    - On localhost / local network -> connects to local backend (http://localhost:5000/api)
- *    - In production (Vercel) -> connects to Render backend (https://codesnippethub.onrender.com/api)
+ * Robust Base API URL Resolution:
+ * - On any public domain (e.g. codeflare-seven.vercel.app), ALWAYS routes to Render backend.
+ * - On localhost or 127.0.0.1 (npm run dev), routes to local Express server on port 5000.
  */
 export function getApiBaseUrl() {
-  if (import.meta.env.VITE_API_BASE_URL) {
-    return import.meta.env.VITE_API_BASE_URL;
-  }
   if (typeof window !== 'undefined') {
     const isLocalhost =
       window.location.hostname === 'localhost' ||
-      window.location.hostname === '127.0.0.1' ||
-      window.location.hostname.startsWith('192.168.');
-    if (isLocalhost) {
-      return 'http://localhost:5000/api';
+      window.location.hostname === '127.0.0.1';
+
+    // When running on Vercel or any non-localhost host:
+    if (!isLocalhost) {
+      const envUrl = import.meta.env.VITE_API_BASE_URL;
+      // Only use envUrl if it's not pointing to localhost
+      if (envUrl && !envUrl.includes('localhost') && !envUrl.includes('127.0.0.1')) {
+        return envUrl;
+      }
+      return 'https://codesnippethub.onrender.com/api';
     }
   }
-  return 'https://codesnippethub.onrender.com/api';
-}
 
-const API_BASE_URL = getApiBaseUrl();
+  // Local development (npm run dev)
+  return import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+}
 
 /**
  * Standard fetch wrapper with JWT header injection and error handling
  */
 async function request(endpoint, options = {}) {
-  const url = `${API_BASE_URL}${endpoint}`;
+  const baseUrl = getApiBaseUrl();
+  const url = `${baseUrl}${endpoint}`;
   
   // Retrieve token if present in localStorage
   const token = localStorage.getItem(TOKEN_KEY);
@@ -52,7 +54,7 @@ async function request(endpoint, options = {}) {
 
     return json;
   } catch (error) {
-    console.error(`API Error on [${options.method || 'GET'}] ${endpoint}:`, error.message);
+    console.error(`API Error on [${options.method || 'GET'}] ${endpoint} (Target: ${baseUrl}):`, error.message);
     throw error;
   }
 }
@@ -60,7 +62,7 @@ async function request(endpoint, options = {}) {
 export const api = {
   // Base URL inspector
   getBaseUrl() {
-    return API_BASE_URL;
+    return getApiBaseUrl();
   },
 
   // --- AUTHENTICATION APIS ---
