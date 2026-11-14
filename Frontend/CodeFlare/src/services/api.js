@@ -1,6 +1,30 @@
 // API Service Layer for CodeFlare
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 const TOKEN_KEY = 'codeflare_auth_token';
+
+/**
+ * Intelligent Base API URL Resolution:
+ * 1. Honors explicit VITE_API_BASE_URL environment variable if set.
+ * 2. Automatically detects environment via hostname:
+ *    - On localhost / local network -> connects to local backend (http://localhost:5000/api)
+ *    - In production (Vercel) -> connects to Render backend (https://codesnippethub.onrender.com/api)
+ */
+export function getApiBaseUrl() {
+  if (import.meta.env.VITE_API_BASE_URL) {
+    return import.meta.env.VITE_API_BASE_URL;
+  }
+  if (typeof window !== 'undefined') {
+    const isLocalhost =
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1' ||
+      window.location.hostname.startsWith('192.168.');
+    if (isLocalhost) {
+      return 'http://localhost:5000/api';
+    }
+  }
+  return 'https://codesnippethub.onrender.com/api';
+}
+
+const API_BASE_URL = getApiBaseUrl();
 
 /**
  * Standard fetch wrapper with JWT header injection and error handling
@@ -34,6 +58,11 @@ async function request(endpoint, options = {}) {
 }
 
 export const api = {
+  // Base URL inspector
+  getBaseUrl() {
+    return API_BASE_URL;
+  },
+
   // --- AUTHENTICATION APIS ---
 
   async register({ username, email, password }) {

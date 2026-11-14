@@ -9,8 +9,31 @@ const snippetRoutes = require("./routes/snippetRoutes");
 
 const app = express();
 
-// Middlewares
-app.use(cors());
+// Allowed Origins for CORS (Localhost + Vercel Deployment)
+const allowedOrigins = [
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "https://codeflare-seven.vercel.app"
+];
+
+app.use(cors({
+    origin: (origin, callback) => {
+        if (!origin) return callback(null, true);
+        if (
+            allowedOrigins.includes(origin) ||
+            origin.endsWith(".vercel.app") ||
+            origin.includes("localhost") ||
+            origin.includes("127.0.0.1")
+        ) {
+            return callback(null, true);
+        }
+        return callback(null, true);
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+}));
+
 app.use(express.json());
 
 // Routes
@@ -20,7 +43,8 @@ app.use("/api/snippets", snippetRoutes);
 app.get("/", (req, res) => {
     res.json({
         success: true,
-        message: "CodeFlare API is LIVE and healthy 🚀"
+        message: "CodeFlare API is LIVE and healthy 🚀",
+        environment: process.env.NODE_ENV || "development"
     });
 });
 
@@ -47,7 +71,7 @@ const PORT = process.env.PORT || 5000;
 const startServer = async () => {
     await migrateDatabase();
     app.listen(PORT, () => {
-        console.log(`Server is running on http://localhost:${PORT}`);
+        console.log(`Server is running on port ${PORT}`);
     });
 };
 
