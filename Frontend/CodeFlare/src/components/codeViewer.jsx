@@ -30,7 +30,7 @@ export default function CodeViewer({
       >
         <span className="text-5xl mb-4 opacity-40">&lt;/&gt;</span>
         <p className="text-base font-semibold text-slate-300">No snippet selected</p>
-        <p className="text-sm text-slate-500 mt-2 max-w-[260px] leading-relaxed">
+        <p className="text-sm text-slate-500 mt-2 max-w-115 leading-relaxed">
           Click on any snippet from the feed to inspect, edit, or copy its code.
         </p>
         {onBack && (

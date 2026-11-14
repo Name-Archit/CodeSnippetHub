@@ -18,6 +18,8 @@ export default function SnippetFeed({
   loading = false,
   error = null,
   onRetry,
+  user = null,
+  onOpenAuth,
   className = ''
 }) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -67,33 +69,37 @@ export default function SnippetFeed({
         <div className="flex items-center justify-between">
           <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-wide">
             CODE SNIPPETS
-            <span className="ml-3 text-sm font-medium px-3 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
-              {filteredSnippets.length} of {snippets.length}
-            </span>
+            {user && (
+              <span className="ml-3 text-sm font-medium px-3 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+                {filteredSnippets.length} of {snippets.length}
+              </span>
+            )}
           </h1>
         </div>
 
-        {/* Search Input */}
-        <div className="relative">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by title, description, or code content..."
-            className="w-full bg-[#121b35] border border-slate-800 rounded-xl px-4 py-3 text-base text-slate-100 placeholder-slate-500 focus:outline-none focus:border-red-500/70 transition-colors shadow-inner"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery('')}
-              className="absolute right-3.5 top-3 text-xs sm:text-sm text-slate-400 hover:text-white px-1.5 py-0.5 rounded"
-            >
-              Clear
-            </button>
-          )}
-        </div>
+        {/* Search Input (Only show when logged in) */}
+        {user && (
+          <div className="relative">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by title, description, or code content..."
+              className="w-full bg-[#121b35] border border-slate-800 rounded-xl px-4 py-3 text-base text-slate-100 placeholder-slate-500 focus:outline-none focus:border-red-500/70 transition-colors shadow-inner"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3.5 top-3 text-xs sm:text-sm text-slate-400 hover:text-white px-1.5 py-0.5 rounded"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+        )}
 
-        {/* Dynamic Language Filter Chips */}
-        {languageOptions.length > 1 && (
+        {/* Dynamic Language Filter Chips (Only show when logged in and has snippets) */}
+        {user && languageOptions.length > 1 && (
           <div className="flex items-center gap-2 overflow-x-auto pb-1.5 pt-0.5 no-scrollbar scroll-smooth">
             {languageOptions.map((opt) => {
               const isActive = selectedLanguage === opt.name;
@@ -120,8 +126,27 @@ export default function SnippetFeed({
 
       {/* Content Feed List */}
       <div className="flex-1 overflow-y-auto space-y-3.5 pr-1.5">
-        {/* Loading Skeletons */}
-        {loading && (
+        {/* 1. Guest Logged-Out Screen */}
+        {!user && !loading && (
+          <div className="h-80 flex flex-col items-center justify-center text-center p-8 border border-dashed border-slate-800 rounded-2xl bg-[#0d1527]/50 my-auto">
+            <div className="w-16 h-16 rounded-full bg-red-600/15 border border-red-500/30 flex items-center justify-center text-3xl mb-4">
+              🔒
+            </div>
+            <h3 className="text-xl font-bold text-white mb-2">Personal Workspace Locked</h3>
+            <p className="text-sm sm:text-base text-slate-400 max-w-md mb-6 leading-relaxed">
+              Your snippets are private and tied to your account. Please sign in or register to access and manage your personal code snippets.
+            </p>
+            <button
+              onClick={onOpenAuth}
+              className="px-6 py-2.5 bg-red-600 hover:bg-red-500 text-white rounded-xl text-sm font-semibold shadow-lg shadow-red-950/50 transition-all active:scale-95"
+            >
+              Sign In / Register
+            </button>
+          </div>
+        )}
+
+        {/* 2. Loading Skeletons */}
+        {user && loading && (
           <div className="space-y-3.5">
             {[1, 2, 3].map((n) => (
               <div
@@ -136,8 +161,8 @@ export default function SnippetFeed({
           </div>
         )}
 
-        {/* Error State */}
-        {!loading && error && (
+        {/* 3. Error State */}
+        {user && !loading && error && (
           <div className="p-6 rounded-xl border border-red-500/30 bg-red-950/20 text-center space-y-3">
             <p className="text-red-400 font-semibold text-base">Failed to load snippets</p>
             <p className="text-sm text-slate-400">{error}</p>
@@ -152,15 +177,15 @@ export default function SnippetFeed({
           </div>
         )}
 
-        {/* Empty State */}
-        {!loading && !error && filteredSnippets.length === 0 && (
+        {/* 4. Empty State (Logged in but no snippets yet) */}
+        {user && !loading && !error && filteredSnippets.length === 0 && (
           <div className="h-64 flex flex-col items-center justify-center text-center p-6 border border-dashed border-slate-800 rounded-xl text-slate-500">
             <span className="text-4xl mb-3">🔍</span>
             <p className="text-base font-semibold text-slate-300">No matching snippets</p>
             <p className="text-sm text-slate-400 mt-1.5 max-w-sm">
               {searchQuery || selectedLanguage !== 'ALL'
                 ? 'Try broadening your search keywords or switching language filters.'
-                : 'Click "+ Create New Snippet" to store your first piece of code!'}
+                : 'Click "+ Create New Snippet" in the sidebar to add your first snippet!'}
             </p>
             {(searchQuery || selectedLanguage !== 'ALL') && (
               <button
@@ -176,8 +201,9 @@ export default function SnippetFeed({
           </div>
         )}
 
-        {/* Snippet Card List */}
-        {!loading &&
+        {/* 5. Snippet Card List */}
+        {user &&
+          !loading &&
           !error &&
           filteredSnippets.map((snippet) => {
             const isSelected = selectedSnippet?.id === snippet.id;

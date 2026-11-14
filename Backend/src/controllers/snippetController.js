@@ -2,7 +2,7 @@ const snippetService = require("../services/snippetService");
 
 const getSnippets = async (req, res) => {
     try {
-        const userId = req.user?.id || null;
+        const userId = req.user.id;
         const snippets = await snippetService.getAllSnippets(userId);
 
         res.status(200).json({
@@ -22,7 +22,7 @@ const getSnippets = async (req, res) => {
 const createSnippet = async (req, res) => {
     try {
         const { title, language, code, description } = req.body;
-        const userId = req.user?.id || null;
+        const userId = req.user.id;
 
         if (!title || !title.trim() || !language || !language.trim() || !code || !code.trim()) {
             return res.status(400).json({
@@ -56,7 +56,7 @@ const createSnippet = async (req, res) => {
 const getSnippetByID = async (req, res) => { 
     try {
         const { id } = req.params;
-        const userId = req.user?.id || null;
+        const userId = req.user.id;
         const snippet = await snippetService.getSnippetByID(id, userId); 
 
         if (!snippet) {
@@ -85,7 +85,7 @@ const getSnippetByID = async (req, res) => {
 const getSnippetByLanguage = async (req, res) => {
     try {
         const { language } = req.params;
-        const userId = req.user?.id || null;
+        const userId = req.user.id;
 
         if (!language || !language.trim()) {
             return res.status(400).json({
@@ -124,7 +124,7 @@ const updateSnippet = async (req, res) => {
     try {
         const { id } = req.params;
         const { title, language, description, code } = req.body;
-        const userId = req.user?.id || null;
+        const userId = req.user.id;
 
         const updatedSnippet = await snippetService.updateSnippet(
             id,
@@ -158,7 +158,7 @@ const updateSnippet = async (req, res) => {
 const deleteSnippet = async (req, res) => {
     try {
         const { id } = req.params;
-        const userId = req.user?.id || null;
+        const userId = req.user.id;
         const deleted = await snippetService.deleteSnippet(id, userId);
 
         if (!deleted) {

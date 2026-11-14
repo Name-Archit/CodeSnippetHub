@@ -2,27 +2,28 @@ const express = require("express");
 const router = express.Router();
 
 const snippetController = require("../controllers/snippetController");
-const { optionalAuth } = require("../middlewares/authMiddleware");
+const { requireAuth } = require("../middlewares/authMiddleware");
 
-// Attach optionalAuth so req.user is extracted when Authorization header is provided
-router.use(optionalAuth);
+// Enforce authentication on ALL snippet endpoints
+// No user can view, create, edit, or delete snippets without a valid JWT token
+router.use(requireAuth);
 
-// GET all snippets
+// GET all snippets for the logged-in user
 router.get("/", snippetController.getSnippets);
 
-// POST a new snippet
+// POST create a new snippet for the logged-in user
 router.post("/", snippetController.createSnippet);
 
-// GET a snippet by ID
+// GET a snippet by ID (must belong to logged-in user)
 router.get("/:id", snippetController.getSnippetByID);
 
-// GET a snippet by language
+// GET snippets by language (must belong to logged-in user)
 router.get("/language/:language", snippetController.getSnippetByLanguage);
 
-// PUT update a snippet by ID
+// PUT update a snippet by ID (must belong to logged-in user)
 router.put("/:id", snippetController.updateSnippet);
 
-// DELETE a snippet by ID
+// DELETE a snippet by ID (must belong to logged-in user)
 router.delete("/:id", snippetController.deleteSnippet);
 
 module.exports = router;

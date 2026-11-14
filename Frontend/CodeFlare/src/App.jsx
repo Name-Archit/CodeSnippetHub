@@ -24,7 +24,7 @@ export default function App() {
 
   // Modal State Management
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState('create'); 
+  const [modalMode, setModalMode] = useState('create'); // 'create' | 'edit'
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -45,10 +45,13 @@ export default function App() {
         const user = await api.getMe();
         if (user) {
           setCurrentUser(user);
+        } else {
+          setLoading(false);
         }
       } catch (err) {
         console.warn('Session verification failed or expired:', err.message);
         api.logout();
+        setLoading(false);
       }
     }
     loadUserSession();
@@ -56,6 +59,15 @@ export default function App() {
 
   // Fetch snippets for current user context
   const fetchSnippets = useCallback(async () => {
+    // If user is not logged in, do not attempt to fetch private snippets!
+    if (!api.isAuthenticated()) {
+      setSnippets([]);
+      setSelectedSnippet(null);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
@@ -73,9 +85,16 @@ export default function App() {
       });
     } catch (err) {
       console.warn('Backend fetch failed:', err.message);
-      setError(
-        `Could not connect to backend at http://localhost:5000 (${err.message}). Is the backend server running?`
-      );
+      if (err.message.includes('401') || err.message.includes('Authentication')) {
+        api.logout();
+        setCurrentUser(null);
+        setSnippets([]);
+        setSelectedSnippet(null);
+      } else {
+        setError(
+          `Could not connect to backend at http://localhost:5000 (${err.message}). Is the backend server running?`
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -96,14 +115,13 @@ export default function App() {
       }
       if (e.altKey && e.key.toLowerCase() === 'n') {
         e.preventDefault();
-        setModalMode('create');
-        setIsModalOpen(true);
+        handleOpenCreate();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [currentUser]);
 
   // When a snippet is clicked on mobile, automatically navigate to viewer tab
   const handleSelectSnippet = (snippet) => {
@@ -122,14 +140,15 @@ export default function App() {
       setCurrentUser(res.user);
       showToast(`Welcome back, ${res.user.username}! 👋`);
     }
-    fetchSnippets();
   };
 
   const handleLogout = () => {
     api.logout();
     setCurrentUser(null);
+    setSnippets([]);
+    setSelectedSnippet(null);
+    setMobileTab('feed');
     showToast('Signed out successfully', 'info');
-    fetchSnippets();
   };
 
   // Fallback to sample mock data
@@ -143,12 +162,21 @@ export default function App() {
 
   // CREATE Action
   const handleOpenCreate = () => {
+    if (!currentUser) {
+      showToast('Please sign in to create snippets', 'info');
+      setIsAuthModalOpen(true);
+      return;
+    }
     setModalMode('create');
     setIsModalOpen(true);
   };
 
   // EDIT Action
   const handleOpenEdit = (snippetToEdit) => {
+    if (!currentUser) {
+      setIsAuthModalOpen(true);
+      return;
+    }
     const target = snippetToEdit || selectedSnippet;
     if (!target) return;
     setModalMode('edit');
@@ -157,6 +185,10 @@ export default function App() {
 
   // DELETE Trigger
   const handleOpenDelete = (snippetToDelete) => {
+    if (!currentUser) {
+      setIsAuthModalOpen(true);
+      return;
+    }
     const target = snippetToDelete || selectedSnippet;
     if (!target) return;
     setIsDeleteOpen(true);
@@ -226,33 +258,35 @@ export default function App() {
           </div>
         </div>
 
-        {/* Mobile View Toggle Pills (Only on small screens < 768px) */}
-        <div className="flex md:hidden items-center bg-[#0d1527] border border-slate-800 rounded-lg p-0.5 text-xs">
-          <button
-            onClick={() => setMobileTab('feed')}
-            className={`px-2.5 py-1 rounded-md transition-all font-medium ${
-              mobileTab === 'feed'
-                ? 'bg-red-600 text-white shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            Feed
-          </button>
-          <button
-            onClick={() => setMobileTab('viewer')}
-            className={`px-2.5 py-1 rounded-md transition-all font-medium ${
-              mobileTab === 'viewer'
-                ? 'bg-red-600 text-white shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            Code
-          </button>
-        </div>
+        {/* Mobile View Toggle Pills (Only on small screens < 768px when logged in) */}
+        {currentUser && (
+          <div className="flex md:hidden items-center bg-[#0d1527] border border-slate-800 rounded-lg p-0.5 text-xs">
+            <button
+              onClick={() => setMobileTab('feed')}
+              className={`px-3 py-1 rounded-md transition-all font-medium ${
+                mobileTab === 'feed'
+                  ? 'bg-red-600 text-white shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              Feed
+            </button>
+            <button
+              onClick={() => setMobileTab('viewer')}
+              className={`px-3 py-1 rounded-md transition-all font-medium ${
+                mobileTab === 'viewer'
+                  ? 'bg-red-600 text-white shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              Code
+            </button>
+          </div>
+        )}
 
         <button
           onClick={handleOpenCreate}
-          className="p-1.5 sm:px-3 sm:py-1 rounded-lg bg-red-600/20 text-red-400 border border-red-500/30 text-xs font-semibold hover:bg-red-600/30 transition-all flex items-center gap-1"
+          className="p-1.5 sm:px-3 sm:py-1 rounded-lg bg-red-600/20 text-red-400 border border-red-500/30 text-xs sm:text-sm font-semibold hover:bg-red-600/30 transition-all flex items-center gap-1"
         >
           <span>+</span> <span className="hidden sm:inline">New</span>
         </button>
@@ -281,6 +315,8 @@ export default function App() {
           loading={loading}
           error={error}
           onRetry={fetchSnippets}
+          user={currentUser}
+          onOpenAuth={() => setIsAuthModalOpen(true)}
           className={`
             ${mobileTab === 'feed' ? 'flex flex-1' : 'hidden'}
             md:flex md:w-[55%] lg:w-auto lg:flex-1
@@ -344,7 +380,7 @@ export default function App() {
       {/* Global Notification Toast */}
       {toast && (
         <div
-          className={`fixed bottom-4 sm:bottom-6 right-4 sm:right-6 z-50 px-4 py-2.5 rounded-xl border text-xs font-semibold shadow-2xl backdrop-blur-md transition-all flex items-center gap-2 max-w-[90vw] ${
+          className={`fixed bottom-4 sm:bottom-6 right-4 sm:right-6 z-50 px-4 py-2.5 rounded-xl border text-xs sm:text-sm font-semibold shadow-2xl backdrop-blur-md transition-all flex items-center gap-2 max-w-[90vw] ${
             toast.type === 'error'
               ? 'bg-red-950/80 border-red-500/60 text-red-200'
               : toast.type === 'info'
