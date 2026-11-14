@@ -60,7 +60,8 @@ const register = async (req, res) => {
         console.error("Registration error:", error);
         return res.status(500).json({
             success: false,
-            message: "Failed to create account. Please try again later."
+            message: "Failed to create account. Please try again later.",
+            error: error.message
         });
     }
 };
@@ -113,7 +114,8 @@ const login = async (req, res) => {
         console.error("Login error:", error);
         return res.status(500).json({
             success: false,
-            message: "Internal server error during authentication"
+            message: "Internal server error during authentication",
+            error: error.message
         });
     }
 };

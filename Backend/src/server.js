@@ -3,6 +3,7 @@ require("dotenv").config({ path: path.resolve(__dirname, "../.env") });
 const express = require("express");
 const cors = require("cors");
 
+const pool = require("../config/db");
 const migrateDatabase = require("../config/migrate");
 const authRoutes = require("./routes/authRoutes");
 const snippetRoutes = require("./routes/snippetRoutes");
@@ -40,11 +41,27 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/snippets", snippetRoutes);
 
-app.get("/", (req, res) => {
+// Health check with database diagnostic report
+app.get("/", async (req, res) => {
+    let dbStatus = "connected";
+    let dbError = null;
+
+    try {
+        await pool.query("SELECT NOW()");
+    } catch (err) {
+        dbStatus = "disconnected";
+        dbError = err.message;
+    }
+
     res.json({
         success: true,
-        message: "CodeFlare API is LIVE and healthy 🚀",
-        environment: process.env.NODE_ENV || "development"
+        message: "CodeFlare API is LIVE 🚀",
+        database: {
+            status: dbStatus,
+            usingDatabaseUrl: Boolean(process.env.DATABASE_URL),
+            error: dbError
+        },
+        timestamp: new Date().toISOString()
     });
 });
 
