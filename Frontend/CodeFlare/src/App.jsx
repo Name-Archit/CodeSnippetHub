@@ -24,7 +24,7 @@ export default function App() {
 
   // Modal State Management
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState('create'); // 'create' | 'edit'
+  const [modalMode, setModalMode] = useState('create'); 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -273,7 +273,7 @@ export default function App() {
           hasSelectedSnippet={Boolean(selectedSnippet)}
         />
 
-        {/* 2. Middle Snippet Feed */}
+        {/* 2. Middle Snippet Feed (Primary generous workspace) */}
         <SnippetFeed
           snippets={snippets}
           selectedSnippet={selectedSnippet}
@@ -283,11 +283,11 @@ export default function App() {
           onRetry={fetchSnippets}
           className={`
             ${mobileTab === 'feed' ? 'flex flex-1' : 'hidden'}
-            md:flex md:w-1/2 lg:w-auto lg:flex-1
+            md:flex md:w-[55%] lg:w-auto lg:flex-1
           `}
         />
 
-        {/* 3. Right Code Viewer */}
+        {/* 3. Right Code Viewer (Balanced 33%-38% inspection pane) */}
         <CodeViewer
           snippet={selectedSnippet}
           onEditSnippet={handleOpenEdit}
@@ -295,7 +295,7 @@ export default function App() {
           onBack={() => setMobileTab('feed')}
           className={`
             ${mobileTab === 'viewer' ? 'flex flex-1' : 'hidden'}
-            md:flex md:w-1/2 lg:w-[45%] xl:w-[48%]
+            md:flex md:w-[45%] lg:w-[38%] xl:w-[35%] 2xl:w-[33%]
           `}
         />
       </div>

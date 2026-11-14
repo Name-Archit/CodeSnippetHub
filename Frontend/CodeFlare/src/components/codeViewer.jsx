@@ -11,7 +11,7 @@ export default function CodeViewer({
   const [copied, setCopied] = useState(false);
   const [wrapCode, setWrapCode] = useState(false);
 
-  // Hook Rule: Always call hooks at the top level
+  // Hook Rule: Always call hooks at the top level before any early return!
   const codeLines = useMemo(() => {
     if (!snippet?.code) return [];
     return snippet.code.split('\n');
@@ -28,17 +28,17 @@ export default function CodeViewer({
       <section
         className={`bg-[#080d1a] p-6 text-slate-500 flex flex-col items-center justify-center h-full text-center ${className}`}
       >
-        <span className="text-4xl mb-3 opacity-40">&lt;/&gt;</span>
-        <p className="text-sm font-medium text-slate-400">No snippet selected</p>
-        <p className="text-xs text-slate-600 mt-1 max-w-[220px]">
+        <span className="text-5xl mb-4 opacity-40">&lt;/&gt;</span>
+        <p className="text-base font-semibold text-slate-300">No snippet selected</p>
+        <p className="text-sm text-slate-500 mt-2 max-w-[260px] leading-relaxed">
           Click on any snippet from the feed to inspect, edit, or copy its code.
         </p>
         {onBack && (
           <button
             onClick={onBack}
-            className="md:hidden mt-4 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-medium transition-colors"
+            className="md:hidden mt-5 px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-sm font-medium transition-colors"
           >
-            ← View Snippet List
+            ← View Snippet Feed
           </button>
         )}
       </section>
@@ -57,14 +57,14 @@ export default function CodeViewer({
 
   return (
     <section
-      className={`bg-[#080d1a] p-4 sm:p-6 flex flex-col h-full overflow-hidden ${className}`}
+      className={`bg-[#080d1a] p-5 sm:p-7 flex flex-col h-full overflow-hidden ${className}`}
     >
-      {/* Mobile Back Button (Visible only on small screens when onBack is passed) */}
+      {/* Mobile Back Button */}
       {onBack && (
-        <div className="md:hidden mb-3">
+        <div className="md:hidden mb-4">
           <button
             onClick={onBack}
-            className="text-xs text-slate-400 hover:text-white flex items-center gap-1.5 py-1 px-2 rounded-lg bg-slate-800/80 border border-slate-700"
+            className="text-sm text-slate-300 hover:text-white flex items-center gap-2 py-1.5 px-3 rounded-lg bg-slate-800/90 border border-slate-700 font-medium"
           >
             <span>←</span> Back to Snippets
           </button>
@@ -72,31 +72,31 @@ export default function CodeViewer({
       )}
 
       {/* Top Header */}
-      <div className="flex justify-between items-start mb-4 gap-2">
+      <div className="flex justify-between items-start mb-5 gap-3">
         <div className="overflow-hidden flex-1">
           <h2
-            className="text-lg sm:text-xl font-bold text-white truncate"
+            className="text-xl sm:text-2xl font-bold text-white truncate"
             title={snippet.title}
           >
             {snippet.title}
           </h2>
-          <div className="flex items-center gap-2 mt-1">
-            <span className="text-xs font-semibold px-2 py-0.5 rounded bg-red-500/10 text-red-400 border border-red-500/20">
+          <div className="flex items-center gap-2.5 mt-2">
+            <span className="text-xs sm:text-sm font-semibold px-3 py-0.5 rounded bg-red-500/10 text-red-400 border border-red-500/20">
               {snippet.language}
             </span>
-            <span className="text-xs text-slate-500">
+            <span className="text-xs sm:text-sm text-slate-400">
               {codeLines.length} {codeLines.length === 1 ? 'line' : 'lines'}
             </span>
           </div>
         </div>
 
         {/* Action Controls */}
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           {/* Edit */}
           {onEditSnippet && (
             <button
               onClick={() => onEditSnippet(snippet)}
-              className="p-1.5 sm:p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors border border-transparent hover:border-slate-700"
+              className="p-2 sm:p-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors border border-transparent hover:border-slate-700 text-base"
               title="Edit Snippet"
             >
               ✎
@@ -107,17 +107,17 @@ export default function CodeViewer({
           {onDeleteSnippet && (
             <button
               onClick={() => onDeleteSnippet(snippet)}
-              className="p-1.5 sm:p-2 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-950/30 transition-colors border border-transparent hover:border-red-900/50"
+              className="p-2 sm:p-2.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-950/30 transition-colors border border-transparent hover:border-red-900/50 text-base"
               title="Delete Snippet"
             >
               🗑
             </button>
           )}
 
-          {/* Copy */}
+          {/* Copy Button */}
           <button
             onClick={handleCopy}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all flex items-center gap-1.5 ${
+            className={`px-4 py-2 rounded-lg text-sm font-semibold border transition-all flex items-center gap-2 ${
               copied
                 ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400 shadow-sm'
                 : 'bg-red-600/20 hover:bg-red-600/30 text-red-400 border-red-500/30 active:scale-95'
@@ -125,11 +125,11 @@ export default function CodeViewer({
           >
             {copied ? (
               <>
-                <span>✓</span> <span className="hidden sm:inline">Copied!</span>
+                <span className="text-base">✓</span> <span>Copied!</span>
               </>
             ) : (
               <>
-                <span>📋</span> <span>Copy</span>
+                <span className="text-base">📋</span> <span>Copy</span>
               </>
             )}
           </button>
@@ -137,14 +137,14 @@ export default function CodeViewer({
       </div>
 
       {/* Code Toolbar */}
-      <div className="flex items-center justify-between text-[11px] text-slate-500 mb-2 px-1">
-        <span>Syntax: {getPrismLanguage(snippet.language)}</span>
+      <div className="flex items-center justify-between text-xs sm:text-sm text-slate-400 mb-2.5 px-1 font-medium">
+        <span>Language: <span className="text-slate-200 capitalize">{getPrismLanguage(snippet.language)}</span></span>
         <button
           onClick={() => setWrapCode((prev) => !prev)}
-          className={`px-2 py-0.5 rounded border transition-colors ${
+          className={`px-2.5 py-1 rounded-md border text-xs sm:text-sm transition-colors ${
             wrapCode
-              ? 'bg-slate-800 text-slate-300 border-slate-700'
-              : 'text-slate-500 border-transparent hover:text-slate-400'
+              ? 'bg-slate-800 text-slate-200 border-slate-700'
+              : 'text-slate-400 border-transparent hover:text-slate-200'
           }`}
           title="Toggle soft wrapping"
         >
@@ -153,18 +153,18 @@ export default function CodeViewer({
       </div>
 
       {/* Code Display Area with Syntax Highlighting & Line Gutter */}
-      <div className="flex-1 bg-[#050811] border border-slate-800 rounded-xl overflow-auto font-mono text-xs flex">
+      <div className="flex-1 bg-[#050811] border border-slate-800 rounded-xl overflow-auto flex shadow-inner">
         {/* Line Numbers Gutter */}
-        <div className="select-none py-4 pl-2.5 sm:pl-3 pr-2 text-right text-slate-600 bg-[#070b16] border-r border-slate-800/80 font-mono text-[11px] leading-relaxed shrink-0">
+        <div className="select-none py-4 pl-3.5 pr-3 text-right text-slate-500 bg-[#070b16] border-r border-slate-800/80 font-mono text-xs sm:text-sm leading-relaxed shrink-0">
           {codeLines.map((_, idx) => (
             <div key={idx}>{idx + 1}</div>
           ))}
         </div>
 
-        {/* Highlighted Code */}
-        <div className="flex-1 p-3.5 sm:p-4 overflow-auto">
+        {/* Highlighted Code (Medium font size: text-sm sm:text-base) */}
+        <div className="flex-1 p-4 sm:p-5 overflow-auto">
           <pre
-            className={`leading-relaxed font-mono text-slate-200 ${
+            className={`leading-relaxed font-mono text-sm sm:text-base text-slate-100 ${
               wrapCode ? 'whitespace-pre-wrap break-all' : 'whitespace-pre'
             }`}
           >
